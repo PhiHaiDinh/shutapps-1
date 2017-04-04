@@ -19,10 +19,10 @@ import java.util.List;
 public class ApplicationAdapter extends ArrayAdapter<ApplicationInfo> {
     private PackageManager packageManager;
     private Context context;
-    private List<ApplicationInfo> appList;
+    private List<ApplicationInfo> appList = null;
 
-    public ApplicationAdapter(Context context, int textViewResourceId, List<ApplicationInfo> appList) {
-        super(context, textViewResourceId, appList);
+    public ApplicationAdapter(Context context, List<ApplicationInfo> appList) {
+        super(context, R.layout.listlayout, appList);
         this.context = context;
         this.appList = appList;
         packageManager = context.getPackageManager();
