@@ -1,5 +1,6 @@
 package pp_ss2017.controllingapps;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.support.design.widget.TabLayout;
@@ -21,10 +22,9 @@ import com.google.android.gms.nearby.messages.Message;
 import com.google.android.gms.nearby.messages.MessageListener;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener, AppInfoListener{
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
-
     private ViewPager mViewPager;
 
     private static final String TAG = "MainActivity";
@@ -52,6 +52,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         buildGoogleApiClient();
     }
+
+    @Override
+    public void sendAppData(String appName) {
+        MainBLFragment appData = (MainBLFragment) getSupportFragmentManager().findFragmentById(R.id.frag_bl);
+        appData.setMessage(appName);
+    }
+
 
     private void buildGoogleApiClient() {
         if (mGoogleApiClient != null) {
@@ -148,6 +155,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
         super.onStop();
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

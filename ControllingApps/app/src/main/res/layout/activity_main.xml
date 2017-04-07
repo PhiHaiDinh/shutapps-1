@@ -38,4 +38,9 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
+    <fragment android:name="pp_ss2017.controllingapps.MainBLFragment"
+        android:id="@+id/frag_bl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 </android.support.design.widget.CoordinatorLayout>
