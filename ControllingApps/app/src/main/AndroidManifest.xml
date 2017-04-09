@@ -12,14 +12,24 @@
         <meta-data
             android:name="com.google.android.nearby.messages.API_KEY"
             android:value="AIzaSyAnW4NKl2WkxPfJZnYUWia9_PpmvJZLQiU" />
-        <activity android:name=".MainActivity"
-                  android:theme="@style/AppTheme.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity android:name=".TestActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name="DetectionService"
+            android:label="@string/service_name"
+            >
+        </service>
     </application>
 
 </manifest>

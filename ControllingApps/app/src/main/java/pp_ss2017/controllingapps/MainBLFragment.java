@@ -19,7 +19,7 @@ public class MainBLFragment extends Fragment {
     }
 
     public void setMessage(String appName) {
-        TextView txt = (TextView) root.findViewById(R.id.textView1);
+        TextView txt = (TextView) this.getView().findViewById(R.id.textView1);
         txt.setText("basfaoufgbouagnoa");
         Log.d("Hello", appName);
     }
