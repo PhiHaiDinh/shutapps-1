@@ -44,7 +44,7 @@ public class TestActivity extends AppCompatActivity {
         this.startService(intent);
     }
 
-    @Override
+    /*@Override
     protected void onResume() {
         super.onResume();
 
@@ -65,7 +65,7 @@ public class TestActivity extends AppCompatActivity {
         if(AndroidProcesses.isMyProcessInTheForeground()) {
             Log.d("News", "ShutApps ist aktiv!");
         }
-    }
+    }*/
 
     /*@Override
     protected void onCreate(Bundle savedInstanceState) {
