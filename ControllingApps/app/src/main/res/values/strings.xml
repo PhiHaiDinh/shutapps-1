@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">ShutApps</string>
     <string name="service_name">DetectionService</string>
+    <string name="facebook_app_id">471678116496883</string>
+    <string name="loading">Loading</string>
+    <string name="action_logout"> Log Out</string>
+    <string name="firebase_error_login">Firebase Login Error</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

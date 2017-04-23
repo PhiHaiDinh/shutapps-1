@@ -4,4 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="pp_ss2017.controllingapps.MainActivity">
 
+    <item android:id="@+id/action_logout" android:title="@string/action_logout"/>
+
 </menu>
