@@ -4,15 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="pp_ss2017.controllingapps.activities.LoginActivity">
+    tools:context="pp_ss2017.controllingapps.activities.FriendsActivity">
 
-    <com.facebook.login.widget.LoginButton
-        android:id="@+id/login_button"
+    <TextView
+        android:id="@+id/textView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
+        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="219dp" />
+        android:text="Das ist die FriendsActivity" />
 
 </RelativeLayout>

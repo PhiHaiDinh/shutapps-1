@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import pp_ss2017.controllingapps.services.BlockService;
+
 public class FirebaseTestActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener{
 
@@ -140,7 +142,9 @@ public class FirebaseTestActivity extends AppCompatActivity implements GoogleApi
                                         if(messageAsString.equalsIgnoreCase(id)) {
                                             temp = name;
                                             Log.d("abgleich", name + " ist ein Freund und in der Nähe!");
-                                            myRef.child("groups").child("group"+i).setValue("Test");
+                                            //myRef.child("groups").child("group"+i).setValue("Test");
+                                            Intent intent = new Intent(FirebaseTestActivity.this, BlockService.class);
+                                            startService(intent);
                                         }
                                     }
                                 } catch(JSONException e) {
@@ -157,6 +161,8 @@ public class FirebaseTestActivity extends AppCompatActivity implements GoogleApi
                 String messageAsString = new String(message.getContent());
                 Log.d("nearby", "Lost sight of message: " + messageAsString);
                 Log.d("lost", temp + " ist nicht mehr in der Nähe!");
+                Intent intent = new Intent(FirebaseTestActivity.this, BlockService.class);
+                stopService(intent);
             }
         };
     }
@@ -172,9 +178,9 @@ public class FirebaseTestActivity extends AppCompatActivity implements GoogleApi
     }
 
     private void goLoginScreen() {
-        Intent intent = new Intent(this, LoginActivity.class);
+        /*Intent intent = new Intent(this, TempLoginActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        startActivity(intent);*/
     }
 
     public void logout(View view) {
@@ -263,6 +269,9 @@ public class FirebaseTestActivity extends AppCompatActivity implements GoogleApi
         Nearby.Messages.unsubscribe(mGoogleApiClient, mMessageListener);
     }
 
+    public void testNoti(View view) {
+
+    }
 
 
 
