@@ -43,7 +43,6 @@ public class AppListAdapter extends ArrayAdapter<ApplicationInfo> {
     private Context context;
     private List<ApplicationInfo> appList;
     private String profileID;
-    private String tempProfileID = "1350028491755775";
 
     public AppListAdapter(Context context, int textViewResourceId, List<ApplicationInfo> appList, String profileID) {
         super(context, textViewResourceId, appList);
@@ -67,8 +66,7 @@ public class AppListAdapter extends ArrayAdapter<ApplicationInfo> {
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "Position: " + clickPosition);
-                Log.d(TAG, profileID);
-                final String dbKey = "blacklist" + tempProfileID;
+                final String dbKey = "blacklist" + profileID;
 
                 myRef.child(dbKey).child(applicationInfo.loadLabel(packageManager).toString()).setValue(applicationInfo.packageName);
             }

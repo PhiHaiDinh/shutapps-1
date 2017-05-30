@@ -1,48 +1,97 @@
 package pp_ss2017.controllingapps.fragments;
 
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import pp_ss2017.controllingapps.R;
+import java.util.ArrayList;
+import java.util.List;
 
-public class BlackListFragment extends Fragment implements View.OnClickListener {
+import pp_ss2017.controllingapps.R;
+import pp_ss2017.controllingapps.adapters.BlackListAdapter;
+
+public class BlackListFragment extends ListFragment {
+
+    private static final String TAG = "BlackListFragment";
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference myRef = database.getReference();
 
+    private List<String> appList = new ArrayList<String>();
+    private BlackListAdapter blackListAdapter;
+    private String profileID;
+    private IDReceiver idReceiver;
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        View view = inflater.inflate(R.layout.fragment_black_list, container, false);
-
-        Button create = (Button) view.findViewById(R.id.createbl);
-        Button clear = (Button) view.findViewById(R.id.clearbl);
-
-        create.setOnClickListener(this);
-        clear.setOnClickListener(this);
-        return view;
+        idReceiver = new BlackListFragment.IDReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("pp_ss2017.controllingapps.BLACKLIST_IDRECEIVER");
+        getActivity().registerReceiver(idReceiver, filter);
     }
 
     @Override
-    public void onClick(View view) {
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(idReceiver);
+    }
 
-        switch(view.getId()) {
-            case R.id.createbl:
+    class IDReceiver extends BroadcastReceiver {
 
-                break;
-            case R.id.clearbl:
-                break;
-            default:
-                break;
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            profileID = intent.getStringExtra("id");
+
+            String dbKey = "blacklist" + profileID;
+
+            myRef.child(dbKey).addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    blackListAdapter.add(dataSnapshot.getValue().toString());
+                    Log.d(TAG, dataSnapshot.getValue().toString());
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+                    blackListAdapter.remove(dataSnapshot.getValue().toString());
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            blackListAdapter = new BlackListAdapter(getActivity(), R.layout.black_listlayout, appList, profileID);
+            setListAdapter(blackListAdapter);
         }
     }
 }

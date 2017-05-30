@@ -1,11 +1,16 @@
 package pp_ss2017.controllingapps.fragments;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 
@@ -23,16 +28,31 @@ public class AppListFragment extends ListFragment {
     private PackageManager packageManager;
     private List<ApplicationInfo> appList;
     private AppListAdapter appListAdapter;
+    private IDReceiver idReceiver;
 
     private String profileID;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        idReceiver = new IDReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("pp_ss2017.controllingapps.APPLIST_IDRECEIVER");
+        getActivity().registerReceiver(idReceiver, filter);
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         packageManager = getActivity().getPackageManager();
+    }
 
-        new LoadApplications().execute();
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(idReceiver);
     }
 
     private List<ApplicationInfo> checkForLaunchIntent(List<ApplicationInfo> list) {
@@ -77,6 +97,17 @@ public class AppListFragment extends ListFragment {
         protected void onPreExecute() {
             progressDialog = ProgressDialog.show(getActivity(), null, "Loading application info...");
             super.onPreExecute();
+        }
+    }
+
+    class IDReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            profileID = intent.getStringExtra("id");
+            Log.d(TAG, profileID);
+
+            new LoadApplications().execute();
         }
     }
 }

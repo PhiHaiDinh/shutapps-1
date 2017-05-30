@@ -20,7 +20,9 @@ import com.jaredrummler.android.processes.AndroidProcesses;
 import com.jaredrummler.android.processes.models.AndroidAppProcess;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,10 +37,6 @@ public class BlockService extends Service {
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference myRef = database.getReference();
 
-    private String packageName1 = "com.google.android.youtube";
-    private String packageName2 = "com.facebook.katana";
-    private String packageName3 = "com.instagram.android";
-
     private Context appContext;
 
     private Handler handler;
@@ -46,7 +44,7 @@ public class BlockService extends Service {
 
     private BlockServiceReceiver blockServiceReceiver;
 
-    private List<String> blockedApps = new ArrayList<String>();
+    private Set blockedApps = new HashSet();
 
     @Override
     public void onCreate() {
@@ -68,21 +66,19 @@ public class BlockService extends Service {
             @Override
             public void run() {
                 List<AndroidAppProcess> processes = AndroidProcesses.getRunningForegroundApps(BlockService.this);
-                for(int i=0; i<blockedApps.size(); i++) {
-                    for(int j=0; j<processes.size(); j++) {
-                        AndroidAppProcess process = processes.get(j);
-                        String processName = process.name;
-                        if (blockedApps.get(i).equalsIgnoreCase(processName)) {
-                            //Toast.makeText(BlockService.this.getApplicationContext(), "blocked", Toast.LENGTH_SHORT).show();
-                            shortToast(processName);
-                            Intent startHomescreen = new Intent(Intent.ACTION_MAIN);
-                            startHomescreen.addCategory(Intent.CATEGORY_HOME);
-                            startHomescreen.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startHomescreen.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(startHomescreen);
-                        }
-                        Log.d(TAG, processName);
+                for(int i=0; i<processes.size(); i++) {
+                    AndroidAppProcess process = processes.get(i);
+                    String processName = process.name;
+                    if (blockedApps.contains(processName)) {
+                        //Toast.makeText(BlockService.this.getApplicationContext(), "blocked", Toast.LENGTH_SHORT).show();
+                        shortToast(processName);
+                        Intent startHomescreen = new Intent(Intent.ACTION_MAIN);
+                        startHomescreen.addCategory(Intent.CATEGORY_HOME);
+                        startHomescreen.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startHomescreen.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(startHomescreen);
                     }
+                    Log.d(TAG, processName);
                 }
             }
         }, 2000, 2000);
@@ -138,7 +134,7 @@ public class BlockService extends Service {
 
                     @Override
                     public void onChildRemoved(DataSnapshot dataSnapshot) {
-
+                        blockedApps.remove(dataSnapshot.getValue().toString());
                     }
 
                     @Override

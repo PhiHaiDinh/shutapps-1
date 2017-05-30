@@ -1,31 +1,8 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frame_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="pp_ss2017.controllingapps.fragments.BlackListFragment">
 
-    <Button
-        android:id="@+id/clearbl"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="clear backlist" />
-
-    <Button
-        android:id="@+id/createbl"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="create blacklist"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" />
-
-    <TextView
-        android:id="@+id/textView4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="69dp"
-        android:text="TextView"
-        android:layout_below="@+id/clearbl"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true" />
-</RelativeLayout>
+</FrameLayout>

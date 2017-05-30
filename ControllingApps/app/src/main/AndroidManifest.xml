@@ -34,7 +34,8 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".NotificationActivity" />
+        <activity android:name=".NotificationActivity">
+        </activity>
         <activity android:name=".activities.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

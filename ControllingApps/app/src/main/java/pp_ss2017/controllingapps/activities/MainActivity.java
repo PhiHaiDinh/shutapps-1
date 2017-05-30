@@ -1,5 +1,6 @@
 package pp_ss2017.controllingapps.activities;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseSettings;
@@ -9,12 +10,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -34,24 +38,33 @@ import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
+import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import pp_ss2017.controllingapps.adapters.DialogAdapter;
 import pp_ss2017.controllingapps.adapters.PagerAdapter;
@@ -66,6 +79,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     private ViewPager viewPager;
     private NotificationReceiver notificationReceiver;
 
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference();
+
     private FirebaseAuth firebaseAuth;
 
     private static final String ENABLED_NOTIFICATION_LISTENERS = "enabled_notification_listeners";
@@ -77,13 +93,24 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     private BeaconManager beaconManager;
 
     private String profileID;
+    private String cleanID;
     private List<String> personList = new ArrayList<String>();
+
+    private static final int PERMISSION_REQUEST_CODE = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
+
+        int permission = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "Permission for location denied");
+            makeRequest();
+        }
 
         firebaseAuth = firebaseAuth.getInstance();
 
@@ -130,6 +157,8 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         filter.addAction("pp_ss2017.controllingapps.NOTIFICATION_LISTENER_SERVICE");
         registerReceiver(notificationReceiver, filter);
 
+        final SharedPreferences sharedPreferences = this.getSharedPreferences("pp_ss2017.controllingapps", Context.MODE_PRIVATE);
+
         GraphRequest request = GraphRequest.newMeRequest(
                 AccessToken.getCurrentAccessToken(),
                 new GraphRequest.GraphJSONObjectCallback() {
@@ -141,12 +170,38 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                         Log.d("test", response.getJSONObject().toString());
                         try {
                             profileID = object.getString("id");
+
+                            Intent idIntentAL = new Intent("pp_ss2017.controllingapps.APPLIST_IDRECEIVER");
+                            idIntentAL.putExtra("id", profileID);
+                            sendBroadcast(idIntentAL);
+
+                            Intent idIntentBL = new Intent("pp_ss2017.controllingapps.BLACKLIST_IDRECEIVER");
+                            idIntentBL.putExtra("id", profileID);
+                            sendBroadcast(idIntentBL);
+
                         } catch(JSONException e) {
                             e.printStackTrace();
                         }
 
+                        String uuidKey = "pp_ss2017.controllingapps.uuid";
+                        String defaultValue = "false";
+                        String uuid = sharedPreferences.getString(uuidKey, defaultValue);
+                        String randomUUID = UUID.randomUUID().toString();
+
+                        String beaconID = randomUUID;
+
+                        if(uuid.equals(defaultValue)) {
+                            myRef.child("identifiers").child(randomUUID).setValue(profileID);
+
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString(uuidKey, randomUUID);
+                            editor.commit();
+                        } else {
+                            beaconID = uuid;
+                        }
+
                         Beacon beacon = new Beacon.Builder()
-                                .setId1(toHex(profileID))
+                                .setId1(beaconID)
                                 .setId2("1")
                                 .setId3("2")
                                 .setManufacturer(0x0118)
@@ -191,12 +246,21 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                 final Collection<Beacon> beacon = collection;
 
                 if(beacon.size() > 0) {
-                    String cleanID = cleanString(beacon.iterator().next().getId1().toString());
-                    final String convertedID = convertHexToStringValue(cleanID);
-                    final String fixedID = removeZero(convertedID);
-                    Log.d("String", fixedID);
+                    final String idFromBeacon = beacon.iterator().next().getId1().toString();
 
                     final Region singleBeaconRegion = new Region(beacon.iterator().next().toString(), beacon.iterator().next().getIdentifiers());
+
+                    myRef.child("identifiers").child(idFromBeacon).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            cleanID = dataSnapshot.getValue().toString();
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
 
                     beaconManager.addMonitorNotifier(new MonitorNotifier() {
                         @Override
@@ -213,21 +277,21 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                                                     String name = obj.getString("name");
                                                     String id = obj.getString("id");
 
-                                                    if (fixedID.equals(id)) {
-                                                        if(!personList.contains(fixedID)) {
+                                                    if(cleanID.equals(id)) {
+                                                        if(!personList.contains(cleanID)) {
                                                             Log.d("abgleich", name + " ist ein Freund und in der Nähe!");
-                                                            personList.add(fixedID);
+                                                            personList.add(cleanID);
 
                                                             if(personList.size() == 1) {
 
                                                                 Intent blockIntent = new Intent("pp_ss2017.controllingapps.BLOCK_SERVICE");
                                                                 blockIntent.putExtra("command", "block");
-                                                                blockIntent.putExtra("id", fixedID);
+                                                                blockIntent.putExtra("id", cleanID);
                                                                 sendBroadcast(blockIntent);
 
                                                                 Intent unnotifyIntent = new Intent("pp_ss2017.controllingapps.NOTIFICATION_LISTENER");
                                                                 unnotifyIntent.putExtra("command", "block");
-                                                                unnotifyIntent.putExtra("id", fixedID);
+                                                                unnotifyIntent.putExtra("id", cleanID);
                                                                 sendBroadcast(unnotifyIntent);
                                                             }
                                                         }
@@ -245,8 +309,8 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                         public void didExitRegion(Region region) {
                             Log.d("Exit", "exited");
 
-                            if(personList.contains(fixedID)) {
-                                personList.remove(fixedID);
+                            if(personList.contains(cleanID)) {
+                                personList.remove(cleanID);
 
                                 if (personList.isEmpty()) {
                                     personList.clear();
@@ -372,51 +436,29 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         startActivity(intent);
     }
 
-    public String toHex(String arg) {
-        return String.format("%032x", new BigInteger(1, arg.getBytes(/*YOUR_CHARSET?*/)));
+    private void makeRequest() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                PERMISSION_REQUEST_CODE);
     }
 
-    public static String convertHexToStringValue(String hex) {
-        StringBuilder stringbuilder = new StringBuilder();
-        char[] hexData = hex.toCharArray();
-        for (int count = 0; count < hexData.length - 1; count += 2) {
-            int firstDigit = Character.digit(hexData[count], 16);
-            int lastDigit = Character.digit(hexData[count + 1], 16);
-            int decimal = firstDigit * 16 + lastDigit;
-            stringbuilder.append((char)decimal);
-        }
-        return stringbuilder.toString();
-    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE: {
 
-    public static String cleanString(String id) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String[] parts = id.split("-");
-        for(int i=0; i<parts.length; i++) {
-            stringBuilder.append(parts[i]);
-        }
-        return stringBuilder.toString();
-    }
+                if (grantResults.length == 0
+                        || grantResults[0] !=
+                        PackageManager.PERMISSION_GRANTED) {
 
-    public String removeZero(String string) {
-        char[] tempCharArray = string.toCharArray();
-        List<Character> cList = new ArrayList<Character>();
-        for(char c : tempCharArray) {
-            cList.add(c);
+                    Log.i(TAG, "Permission has been denied by user");
+                } else {
+                    Log.i(TAG, "Permission has been granted by user");
+                }
+                return;
+            }
         }
-        int i = 0;
-        while(cList.get(i) == 0) {
-            cList.remove(i);
-            i = i + 1;
-        }
-        StringBuilder builder = new StringBuilder(cList.size());
-        for(Character ch: cList) {
-            builder.append(ch);
-        }
-        return builder.toString();
-    }
-
-    public String getProfileID() {
-        return profileID;
     }
 
     class NotificationReceiver extends BroadcastReceiver {

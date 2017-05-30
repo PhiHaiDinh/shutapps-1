@@ -9,22 +9,27 @@ import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
 
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class NotificationService extends NotificationListenerService {
 
     public static final String TAG = "NotificationService";
 
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference();
+
     private NotificationListenerServiceReceiver notificationListenerServiceReceiver;
 
-    private String packageName1 = "com.google.android.youtube";
-    private String packageName2 = "com.facebook.katana";
-    private String packageName3 = "com.instagram.android";
-    private String packageName4 = "com.whatsapp";
-    private String myPackageName = "pp_ss2017.controllingapps";
-
-    private List<String> blockedNotifications = new ArrayList<String>();
+    private Set blockedNotifications = new HashSet();
     private ArrayList<StatusBarNotification> savedNotifications = new ArrayList<StatusBarNotification>();
 
     @Override
@@ -45,7 +50,7 @@ public class NotificationService extends NotificationListenerService {
     public void onNotificationPosted(StatusBarNotification statusBarNotification){
         String packageName = statusBarNotification.getPackageName();
 
-        for(String pkg : blockedNotifications) {
+        for(Object pkg : blockedNotifications) {
             if(packageName.equals(pkg)) {
                 savedNotifications.add(statusBarNotification);
                 cancelNotification(statusBarNotification.getKey());
@@ -65,11 +70,35 @@ public class NotificationService extends NotificationListenerService {
         public void onReceive(Context context, Intent intent) {
             if(intent.getStringExtra("command").equals("block")) {
                 Log.d(TAG, "blocked");
-                blockedNotifications.add(packageName1);
-                blockedNotifications.add(packageName2);
-                blockedNotifications.add(packageName3);
-                //blockedNotifications.add(packageName4);
-                blockedNotifications.add(myPackageName);
+
+                String dbKey = "blacklist" + intent.getStringExtra("id");
+
+                myRef.child(dbKey).addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                        blockedNotifications.add(dataSnapshot.getValue().toString());
+                    }
+
+                    @Override
+                    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onChildRemoved(DataSnapshot dataSnapshot) {
+                        blockedNotifications.remove(dataSnapshot.getValue().toString());
+                    }
+
+                    @Override
+                    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
             }
             else if(intent.getStringExtra("command").equals("unblock")) {
                 Log.d(TAG, "unblocked");
