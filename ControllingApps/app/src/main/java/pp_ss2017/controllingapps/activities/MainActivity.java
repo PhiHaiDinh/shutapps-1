@@ -12,6 +12,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.service.notification.StatusBarNotification;
@@ -29,7 +32,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
+import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
@@ -38,11 +45,13 @@ import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -58,18 +67,24 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import pp_ss2017.controllingapps.adapters.DialogAdapter;
 import pp_ss2017.controllingapps.adapters.PagerAdapter;
 import pp_ss2017.controllingapps.R;
-import pp_ss2017.controllingapps.fragments.AppListFragment;
 import pp_ss2017.controllingapps.services.BlockService;
 
 public class MainActivity extends AppCompatActivity implements BeaconConsumer {
@@ -94,7 +109,8 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
     private String profileID;
     private String cleanID;
-    private List<String> personList = new ArrayList<String>();
+    private Set personList = new HashSet();
+    private Map<String, Integer> idMapForView = new HashMap<>();
 
     private static final int PERMISSION_REQUEST_CODE = 101;
 
@@ -117,9 +133,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         if (AccessToken.getCurrentAccessToken() == null) {
             goLoginActivity();
         }
-
-        Intent intent = new Intent(MainActivity.this, BlockService.class);
-        startService(intent);
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Applist"));
@@ -265,7 +278,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                     beaconManager.addMonitorNotifier(new MonitorNotifier() {
                         @Override
                         public void didEnterRegion(Region region) {
-                            Log.d("Enter", "entered");
                             final GraphRequest friendRequest = GraphRequest.newMyFriendsRequest(
                                     AccessToken.getCurrentAccessToken(),
                                     new GraphRequest.GraphJSONArrayCallback() {
@@ -274,26 +286,63 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                                             try {
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     JSONObject obj = jsonArray.getJSONObject(i);
-                                                    String name = obj.getString("name");
-                                                    String id = obj.getString("id");
+                                                    final String name = obj.getString("name");
+                                                    final String id = obj.getString("id");
 
                                                     if(cleanID.equals(id)) {
+                                                        Log.d(TAG, "cleanID equals id");
                                                         if(!personList.contains(cleanID)) {
+                                                            Log.d(TAG, "!peronList contains cleanID");
+                                                            MainActivity.this.runOnUiThread(new Runnable() {
+                                                                @Override
+                                                                public void run() {
+                                                                    LinearLayout hlinearLayout = (LinearLayout) findViewById(R.id.h_Linear);
+
+                                                                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                                                            ViewPager.LayoutParams.WRAP_CONTENT, ViewPager.LayoutParams.WRAP_CONTENT);
+
+                                                                    LinearLayout vlinearLayout = new LinearLayout(MainActivity.this);
+                                                                    int id = View.generateViewId();
+                                                                    vlinearLayout.setId(id);
+                                                                    idMapForView.put(cleanID, id);
+                                                                    vlinearLayout.setOrientation(LinearLayout.VERTICAL);
+
+                                                                    ImageView userPicture = new ImageView(MainActivity.this);
+                                                                    Picasso.with(getApplicationContext())
+                                                                            .load("https://graph.facebook.com/" + cleanID + "/picture?type=large")
+                                                                            .into(userPicture);
+                                                                    userPicture.setOnClickListener(new View.OnClickListener() {
+                                                                        @Override
+                                                                        public void onClick(View view) {
+                                                                            view.startAnimation(AnimationUtils.loadAnimation(MainActivity.this, R.anim.image_click));
+                                                                            Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
+                                                                            intent.putExtra("profileID", cleanID);
+                                                                            intent.putExtra("userName", name);
+                                                                            startActivity(intent);
+                                                                        }
+                                                                    });
+                                                                    vlinearLayout.addView(userPicture);
+
+                                                                    TextView userName = new TextView(MainActivity.this);
+                                                                    userName.setText(name);
+                                                                    vlinearLayout.addView(userName);
+
+                                                                    hlinearLayout.addView(vlinearLayout, params);
+                                                                }
+                                                            });
+
                                                             Log.d("abgleich", name + " ist ein Freund und in der Nähe!");
                                                             personList.add(cleanID);
 
-                                                            if(personList.size() == 1) {
+                                                            Intent blockIntent = new Intent("pp_ss2017.controllingapps.BLOCK_ACCESSIBILITY_SERVICE");
+                                                            blockIntent.putExtra("command", "block");
+                                                            blockIntent.putExtra("id", cleanID);
+                                                            sendBroadcast(blockIntent);
 
-                                                                Intent blockIntent = new Intent("pp_ss2017.controllingapps.BLOCK_SERVICE");
-                                                                blockIntent.putExtra("command", "block");
-                                                                blockIntent.putExtra("id", cleanID);
-                                                                sendBroadcast(blockIntent);
-
-                                                                Intent unnotifyIntent = new Intent("pp_ss2017.controllingapps.NOTIFICATION_LISTENER");
-                                                                unnotifyIntent.putExtra("command", "block");
-                                                                unnotifyIntent.putExtra("id", cleanID);
-                                                                sendBroadcast(unnotifyIntent);
-                                                            }
+                                                            Intent unnotifyIntent = new Intent("pp_ss2017.controllingapps.NOTIFICATION_LISTENER");
+                                                            unnotifyIntent.putExtra("command", "block");
+                                                            unnotifyIntent.putExtra("id", cleanID);
+                                                            sendBroadcast(unnotifyIntent);
                                                         }
                                                     }
                                                 }
@@ -307,21 +356,34 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
                         @Override
                         public void didExitRegion(Region region) {
-                            Log.d("Exit", "exited");
-
                             if(personList.contains(cleanID)) {
                                 personList.remove(cleanID);
+                                Log.d(TAG, "personList contains cleanID");
+
+                                MainActivity.this.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        LinearLayout tempLayout = (LinearLayout) findViewById(idMapForView.get(cleanID));
+                                        tempLayout.removeAllViews();
+                                    }
+                                });
 
                                 if (personList.isEmpty()) {
+                                    Log.d(TAG, "personList is empty");
                                     personList.clear();
 
-                                    Intent unblockIntent = new Intent("pp_ss2017.controllingapps.BLOCK_SERVICE");
-                                    unblockIntent.putExtra("command", "unblock");
+                                    Intent unblockIntent = new Intent("pp_ss2017.controllingapps.BLOCK_ACCESSIBILITY_SERVICE");
+                                    unblockIntent.putExtra("command", "totalunblock");
                                     sendBroadcast(unblockIntent);
 
                                     Intent notifyIntent = new Intent("pp_ss2017.controllingapps.NOTIFICATION_LISTENER");
-                                    notifyIntent.putExtra("command", "unblock");
+                                    notifyIntent.putExtra("command", "totalunblock");
                                     sendBroadcast(notifyIntent);
+                                } else {
+                                    Intent unblockIntent = new Intent("pp_ss2017.controllingapps.BLOCK_ACCESSIBILITY_SERVICE");
+                                    unblockIntent.putExtra("command", "unblock");
+                                    unblockIntent.putExtra("id", cleanID);
+                                    sendBroadcast(unblockIntent);
                                 }
                             }
 
@@ -359,6 +421,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
         super.onDestroy();
         beaconManager.unbind(this);
         unregisterReceiver(notificationReceiver);
+        personList.clear();
     }
 
     @Override
@@ -385,12 +448,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    public void onClicked(View view) {
-        view.startAnimation(AnimationUtils.loadAnimation(this, R.anim.image_click));
-        Intent intent = new Intent(MainActivity.this, FriendsActivity.class);
-        startActivity(intent);
     }
 
     private boolean isNotificationServiceEnabled() {

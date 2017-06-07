@@ -23,6 +23,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
+import pp_ss2017.controllingapps.AppObject;
 import pp_ss2017.controllingapps.R;
 import pp_ss2017.controllingapps.adapters.BlackListAdapter;
 
@@ -65,8 +66,7 @@ public class BlackListFragment extends ListFragment {
             myRef.child(dbKey).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    blackListAdapter.add(dataSnapshot.getValue().toString());
-                    Log.d(TAG, dataSnapshot.getValue().toString());
+                    blackListAdapter.add(dataSnapshot.getKey());
                 }
 
                 @Override
@@ -76,7 +76,7 @@ public class BlackListFragment extends ListFragment {
 
                 @Override
                 public void onChildRemoved(DataSnapshot dataSnapshot) {
-                    blackListAdapter.remove(dataSnapshot.getValue().toString());
+                    blackListAdapter.remove(dataSnapshot.getKey());
                 }
 
                 @Override

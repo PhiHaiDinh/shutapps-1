@@ -1,14 +1,22 @@
 package pp_ss2017.controllingapps.services;
 
-import android.app.Service;
+import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityServiceInfo;
+import android.app.ActivityManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
 import com.google.firebase.database.ChildEventListener;
@@ -16,20 +24,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.jaredrummler.android.processes.AndroidProcesses;
-import com.jaredrummler.android.processes.models.AndroidAppProcess;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
- * Created by DucGiang on 09.04.2017.
+ * Created by DucGiang on 06.06.2017.
  */
 
-public class BlockService extends Service {
+public class BlockAccessibilityService extends AccessibilityService {
 
     private static final String TAG = "BlockService";
 
@@ -39,61 +42,57 @@ public class BlockService extends Service {
     private Context appContext;
 
     private Handler handler;
-    private Timer timer;
 
     private BlockServiceReceiver blockServiceReceiver;
 
     private List<String> blockedApps = new ArrayList<String>();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    public void onServiceConnected() {
+        super.onServiceConnected();
+
+        appContext = getBaseContext();
+
+        AccessibilityServiceInfo config = new AccessibilityServiceInfo();
+        config.eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED;
+        config.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+
+        config.flags = AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS;
+
+        setServiceInfo(config);
+
         handler = new Handler(Looper.getMainLooper());
         blockServiceReceiver = new BlockServiceReceiver();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("pp_ss2017.controllingapps.BLOCK_SERVICE");
+        intentFilter.addAction("pp_ss2017.controllingapps.BLOCK_ACCESSIBILITY_SERVICE");
         registerReceiver(blockServiceReceiver, intentFilter);
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        appContext = getBaseContext();
-
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                List<AndroidAppProcess> processes = AndroidProcesses.getRunningForegroundApps(BlockService.this);
-                for(int i=0; i<processes.size(); i++) {
-                    AndroidAppProcess process = processes.get(i);
-                    String processName = process.name;
-                    if (blockedApps.contains(processName)) {
-                        //Toast.makeText(BlockService.this.getApplicationContext(), "blocked", Toast.LENGTH_SHORT).show();
-                        shortToast(processName);
-                        Intent startHomescreen = new Intent(Intent.ACTION_MAIN);
-                        startHomescreen.addCategory(Intent.CATEGORY_HOME);
-                        startHomescreen.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startHomescreen.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(startHomescreen);
-                    }
-                    Log.d(TAG, processName);
+    public void onAccessibilityEvent(AccessibilityEvent accessibilityEvent) {
+        if(accessibilityEvent.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            if(accessibilityEvent.getPackageName() != null) {
+                Log.i("CurrentPackage", accessibilityEvent.getPackageName().toString());
+                String currentApp = accessibilityEvent.getPackageName().toString();
+                if(blockedApps.contains(currentApp)) {
+                    shortToast(currentApp);
+                    Intent startHomescreen = new Intent(Intent.ACTION_MAIN);
+                    startHomescreen.addCategory(Intent.CATEGORY_HOME);
+                    startHomescreen.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startHomescreen.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(startHomescreen);
                 }
             }
-        }, 2000, 2000);
-        return Service.START_STICKY;
+        }
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        //TODO for communication return IBinder implementation
-        return null;
+    public void onInterrupt() {
+
     }
 
     @Override
     public void onDestroy() {
-        handler.removeCallbacksAndMessages(null);
-        timer.cancel();
         super.onDestroy();
         unregisterReceiver(blockServiceReceiver);
     }

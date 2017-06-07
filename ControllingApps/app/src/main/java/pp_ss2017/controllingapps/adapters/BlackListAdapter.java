@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -16,6 +17,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
+import pp_ss2017.controllingapps.AppObject;
 import pp_ss2017.controllingapps.R;
 
 /**
@@ -29,7 +31,6 @@ public class BlackListAdapter extends ArrayAdapter<String> {
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference myRef = database.getReference();
 
-    private PackageManager packageManager;
     private Context context;
     private List<String> appList;
     private String profileID;
@@ -39,40 +40,33 @@ public class BlackListAdapter extends ArrayAdapter<String> {
         this.context = context;
         this.appList = appList;
         this.profileID = profileID;
-        packageManager = context.getPackageManager();
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
         View listView = convertView;
-        String appName = appList.get(position);
-
-        ApplicationInfo applicationInfo = null;
-
-        try {
-            applicationInfo = packageManager.getApplicationInfo(appName, 0);
-        } catch(PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
+        final String appName = appList.get(position);
 
         if(listView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             listView = inflater.inflate(R.layout.black_listlayout, null);
         }
 
-        final ApplicationInfo applicationName = applicationInfo;
-        listView.setOnClickListener(new View.OnClickListener() {
+        ImageButton imageButton = (ImageButton) listView.findViewById(R.id.removeBtn);
+        imageButton.setTag(position);
+        imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 final String dbKey = "blacklist" + profileID;
 
-                myRef.child(dbKey).child(packageManager.getApplicationLabel(applicationName).toString()).removeValue();
+                myRef.child(dbKey).child(appName).removeValue();
+
             }
         });
 
         if(appName != null) {
             TextView appString = (TextView) listView.findViewById(R.id.app_string);
 
-            appString.setText(packageManager.getApplicationLabel(applicationInfo));
+            appString.setText(appName);
         }
 
         return listView;

@@ -29,7 +29,7 @@ public class NotificationService extends NotificationListenerService {
 
     private NotificationListenerServiceReceiver notificationListenerServiceReceiver;
 
-    private Set blockedNotifications = new HashSet();
+    private List<String> blockedNotifications = new ArrayList<String>();
     private ArrayList<StatusBarNotification> savedNotifications = new ArrayList<StatusBarNotification>();
 
     @Override
@@ -100,7 +100,7 @@ public class NotificationService extends NotificationListenerService {
                     }
                 });
             }
-            else if(intent.getStringExtra("command").equals("unblock")) {
+            else if(intent.getStringExtra("command").equals("totalunblock")) {
                 Log.d(TAG, "unblocked");
                 blockedNotifications.clear();
 

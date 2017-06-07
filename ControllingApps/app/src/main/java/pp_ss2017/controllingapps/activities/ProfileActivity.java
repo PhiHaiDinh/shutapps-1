@@ -2,6 +2,7 @@ package pp_ss2017.controllingapps.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import pp_ss2017.controllingapps.R;
 
