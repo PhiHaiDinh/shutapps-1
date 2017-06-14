@@ -6,13 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -23,9 +17,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-import pp_ss2017.controllingapps.AppObject;
 import pp_ss2017.controllingapps.R;
 import pp_ss2017.controllingapps.adapters.BlackListAdapter;
+
+/**
+ * Dieses Fragment präsentiert die Blacklist.
+ */
 
 public class BlackListFragment extends ListFragment {
 

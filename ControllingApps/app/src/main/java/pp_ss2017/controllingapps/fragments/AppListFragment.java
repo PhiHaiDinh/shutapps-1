@@ -1,19 +1,12 @@
 package pp_ss2017.controllingapps.fragments;
 
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.ListFragment;
-import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-import android.view.LayoutInflater;
 
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -24,10 +17,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-import pp_ss2017.controllingapps.AppObject;
+import pp_ss2017.controllingapps.helper.AppObject;
 import pp_ss2017.controllingapps.R;
-import pp_ss2017.controllingapps.activities.MainActivity;
 import pp_ss2017.controllingapps.adapters.AppListAdapter;
+
+/**
+ * Dieses Fragment präsentiert die App-Liste.
+ */
 
 public class AppListFragment extends ListFragment {
 

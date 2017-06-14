@@ -22,12 +22,6 @@
             android:value="@string/facebook_app_id" />
 
         <service
-            android:name=".services.BlockService"
-            android:label="@string/block_service_name" />
-
-        <activity android:name=".FirebaseTestActivity" />
-
-        <service
             android:name=".services.NotificationService"
             android:label="NotificationService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -47,7 +41,6 @@
                 android:resource="@xml/accessibilityservice"/>
         </service>
 
-        <activity android:name=".NotificationActivity"/>
         <activity android:name=".activities.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -58,8 +51,6 @@
         <activity android:name=".activities.MainActivity" />
         <activity android:name=".activities.ProfileActivity" />
         <activity android:name=".activities.FriendsActivity" />
-        <activity android:name=".TestActivity">
-        </activity>
     </application>
 
 </manifest>

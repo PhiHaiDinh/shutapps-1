@@ -1,15 +1,11 @@
 package pp_ss2017.controllingapps.adapters;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.firebase.database.DatabaseReference;
@@ -17,11 +13,12 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
-import pp_ss2017.controllingapps.AppObject;
 import pp_ss2017.controllingapps.R;
 
 /**
  * Created by DucGiang on 23.05.2017.
+ *
+ * Dieser Adapter dient zu Erstellung der Blacklist.
  */
 
 public class BlackListAdapter extends ArrayAdapter<String> {

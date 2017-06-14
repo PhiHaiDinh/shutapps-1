@@ -2,17 +2,10 @@ package pp_ss2017.controllingapps.services;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.app.ActivityManager;
-import android.app.usage.UsageStats;
-import android.app.usage.UsageStatsManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -30,6 +23,8 @@ import java.util.List;
 
 /**
  * Created by DucGiang on 06.06.2017.
+ *
+ * Der Service zum Blockieren der Apps.
  */
 
 public class BlockAccessibilityService extends AccessibilityService {
@@ -72,7 +67,6 @@ public class BlockAccessibilityService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent accessibilityEvent) {
         if(accessibilityEvent.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             if(accessibilityEvent.getPackageName() != null) {
-                Log.i("CurrentPackage", accessibilityEvent.getPackageName().toString());
                 String currentApp = accessibilityEvent.getPackageName().toString();
                 if(blockedApps.contains(currentApp)) {
                     shortToast(currentApp);

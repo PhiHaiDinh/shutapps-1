@@ -1,7 +1,11 @@
-package pp_ss2017.controllingapps;
+package pp_ss2017.controllingapps.helper;
 
 /**
  * Created by DucGiang on 03.06.2017.
+ *
+ * Klasse für ein selbsterstelltes Objekt für eine App
+ * Objekt besteht aus App-Name, Package-Name, Pfad im Firebase-Storage für das App-Icon und die Kategorie der App
+ *
  */
 
 public class AppObject extends Object {

@@ -1,26 +1,18 @@
 package pp_ss2017.controllingapps.activities;
 
 import android.Manifest;
-import android.app.Dialog;
 import android.bluetooth.le.AdvertiseCallback;
 import android.bluetooth.le.AdvertiseSettings;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.RemoteException;
 import android.provider.Settings;
-import android.service.notification.StatusBarNotification;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
@@ -32,20 +24,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
-import com.facebook.GraphRequestAsyncTask;
 import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
 import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -58,41 +45,29 @@ import org.altbeacon.beacon.BeaconConsumer;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.BeaconTransmitter;
-import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.utils.UrlBeaconUrlCompressor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import pp_ss2017.controllingapps.adapters.DialogAdapter;
 import pp_ss2017.controllingapps.adapters.PagerAdapter;
 import pp_ss2017.controllingapps.R;
-import pp_ss2017.controllingapps.services.BlockService;
 
 public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
     private static final String TAG = "MainActivity";
 
     private ViewPager viewPager;
-    private NotificationReceiver notificationReceiver;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference myRef = database.getReference();
@@ -103,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     private static final String ACTION_NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS";
 
     private AlertDialog enableNotificationListenerAlertDialog;
-    private DialogAdapter dialogAdapter;
 
     private BeaconManager beaconManager;
 
@@ -165,13 +139,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
             enableNotificationListenerAlertDialog.show();
         }
 
-        notificationReceiver = new NotificationReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("pp_ss2017.controllingapps.NOTIFICATION_LISTENER_SERVICE");
-        registerReceiver(notificationReceiver, filter);
-
         final SharedPreferences sharedPreferences = this.getSharedPreferences("pp_ss2017.controllingapps", Context.MODE_PRIVATE);
 
+        //Facebook-Request zum Holen der eigenen Profile ID
         GraphRequest request = GraphRequest.newMeRequest(
                 AccessToken.getCurrentAccessToken(),
                 new GraphRequest.GraphJSONObjectCallback() {
@@ -253,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
     @Override
     public void onBeaconServiceConnect() {
+        //Beacons in der Umgebung werden gescannt
         beaconManager.addRangeNotifier(new RangeNotifier() {
             @Override
             public void didRangeBeaconsInRegion(Collection<Beacon> collection, Region region) {
@@ -274,8 +245,9 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
 
                         }
                     });
-
+                    //bestimmte Beacons werden beobachtet
                     beaconManager.addMonitorNotifier(new MonitorNotifier() {
+                        //Beacon kommt in die Reichweite
                         @Override
                         public void didEnterRegion(Region region) {
                             final GraphRequest friendRequest = GraphRequest.newMyFriendsRequest(
@@ -354,6 +326,7 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                             friendRequest.executeAndWait();
                         }
 
+                        //Beacon verlässt die Reichweite
                         @Override
                         public void didExitRegion(Region region) {
                             if(personList.contains(cleanID)) {
@@ -420,7 +393,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
     protected void onDestroy() {
         super.onDestroy();
         beaconManager.unbind(this);
-        unregisterReceiver(notificationReceiver);
         personList.clear();
     }
 
@@ -514,27 +486,6 @@ public class MainActivity extends AppCompatActivity implements BeaconConsumer {
                     Log.i(TAG, "Permission has been granted by user");
                 }
                 return;
-            }
-        }
-    }
-
-    class NotificationReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(intent != null) {
-                ArrayList<StatusBarNotification> savedNotifications = intent.getParcelableArrayListExtra("notifyList");
-                if(savedNotifications != null) {
-                    Log.d("saved", savedNotifications.toString());
-
-                    Dialog dialog = new Dialog(MainActivity.this);
-                    dialog.setContentView(R.layout.dialog_list);
-                    dialog.setTitle("Notifications");
-                    ListView listView = (ListView) dialog.findViewById(R.id.List);
-                    dialogAdapter = new DialogAdapter(MainActivity.this, R.layout.dialog_listlayout, savedNotifications);
-                    listView.setAdapter(dialogAdapter);
-                    dialog.show();
-                }
             }
         }
     }

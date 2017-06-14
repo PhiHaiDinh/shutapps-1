@@ -9,6 +9,8 @@ import pp_ss2017.controllingapps.fragments.BlackListFragment;
 
 /**
  * Created by DucGiang on 28.04.2017.
+ *
+ * Dieser Adapter ist für die TabView zuständig.
  */
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
