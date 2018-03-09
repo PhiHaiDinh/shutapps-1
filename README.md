@@ -32,7 +32,7 @@ Quellcode: [Android-App](https://github.com/ducle07/shutapps/tree/master/Control
 
 The mobile application "ShutApps" was developed during my study "media computer science" in the module "practical project" in collaberation with Vu Phi Hai Dinh. The module is considered as the preliminary project for the bachelor thesis. The idea of my bachelor thesis is based on the idea, the problems and the results of this practical project. While Phi Hai was largely responsible for the conceptual modeling, most of my tasks were the technical implementation of the Android application.
 
-The aim of this project is to prove whether it is technically possible to use a mobile application to limit the smartphone usage on friends' devices. With the mobile application I am supposed to be able to block certain apps on friends' smartphones when they are nearby. The prerequisite is that all participants are consciously using the mobile application.
+The aim of this project is to prove whether it is technically possible to use a mobile application to limit the smartphone usage on friends' devices. With this mobile application I am supposed to be able to block certain apps on friends' smartphones when they are nearby. The prerequisite is that all participants are consciously using the mobile application.
 
 Source Code: [Android-App](https://github.com/ducle07/shutapps/tree/master/ControllingApps)
 
