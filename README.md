@@ -11,6 +11,8 @@ Hier soll ich mit der App, bestimmte Apps auf den Smartphones von Freunden block
 
 Quellcode: [Android-App](https://github.com/ducle07/shutapps/tree/master/ControllingApps)
 
+Weitere Informationen in der [Projektdokumentation](https://github.com/ducle07/shutapps/blob/master/Projektdokumentation.pdf)
+
 ## Architektur & verwendete Technologien
 ![Architekturdiagramm](https://github.com/ducle07/shutapps/blob/master/Architektur.png)
 
